@@ -61,7 +61,7 @@ void BROADCAST();
 void BLOCK();
 void UNBLOCK();
 void LOGOUT();
-void EXIT();
+void EXIT(int Socket);
 void SENDFILE();
 
 struct user 
@@ -119,6 +119,7 @@ int main(int argc, char **argv)
 	}
 	return 0;
 }
+
 // server
 void ServerH(int PortNumber){
 	// creating sock
@@ -361,7 +362,7 @@ void STATISTICS(){
 			if(list[i].is_logged_in){
 				statis = "Logged-in";
 			}
-			sprintf(buf,"%-5d%-35s%-8d%-8d%-8s\n", count, list[i].num_msg_sent, list[i].num_msg_rcv, statis);
+			sprintf(buf,"%-5d%-35s%-8d%-8d%-8s\n", count,list[i].hostname, list[i].num_msg_sent, list[i].num_msg_rcv, statis);
 			ret[count-1] = buf;
 			count++;
 		}
@@ -400,7 +401,7 @@ void LOGOUT(){
 }
 
 void EXIT(int Socket){
-	close(socket);
+	close(Socket);
 	cse4589_print_and_log("[EXIT:SUCCESS]");
 	cse4589_print_and_log("[EXIT:END]");
 }
