@@ -1,7 +1,6 @@
 /**
  * @wzhou29_assignment1
  * @author  Weicheng Zhou <wzhou29@buffalo.edu>
- * @author  Haifeng Xiao <haifengx@bufalo.edu>
  * @version 1.0
  *
  * @section LICENSE
@@ -31,7 +30,6 @@
 #include <string.h>
 #include <arpa/inet.h>
 #include <ctype.h>
-#include <sys/select.h>
 
 #include "../include/global.h"
 #include "../include/logger.h"
@@ -71,7 +69,7 @@ struct user
 	int port_num;
 	int num_msg_sent;
 	int num_msg_rcv;
-	// char status;
+	char status;
 	// int fd;
 	bool is_logged_in;
 	bool is_server;
@@ -106,7 +104,7 @@ int main(int argc, char **argv)
 			ClientH(atoi(argv[2]));
 		}
 		else { 
-			cse4589_print_and_log("./[name of file] [c/s] [port]\n"); 
+			cse4589_print_and_log("./[name of file] [c/s] [port]"); 
 			exit(-1); 
 		}
 		
@@ -143,11 +141,68 @@ void ServerH(int PortNumber){
 		exit(-1);
 	}
 
+	int head_socket, selret, sock_idx, fdaccept=0, caddr_len;
+	struct sockaddr_in client_addr; 
+	fd_set master_list, watch_list;
+	// zero FD sets
+	FD_ZERO(&master_list); 
+	FD_ZERO(&watch_list); 
+	// register listening socket & STDIN to mastear_list
+	FD_SET(ServerSocket, &master_list); 
+	FD_SET(0, &master_list); 
+	
+	head_socket = ServerSocket; 
+	
+	struct user users[4]; 
+	int num_users = 0; 
+
+	while(True) {
+		memcpy(&watch_list, &master_list, sizeof(master_list)); 
+		if ((selret = select(head_socket + 1, &watch_list, NULL, NULL, NULL)) < 0) { 
+			perror("select() problemo"); 
+			exit(-1);
+		} 
+		else {
+			for (sock_idx = 0; sock_idx <= head_socket; ++sock_idx) { 
+				if (FD_ISSET(sock_idx, &watch_list)) { 
+					if (sock_idx == 0) { // get SERVER commands 
+						char *input = (char*) malloc(sizeof(char)*100);
+						memset(input, '\0', 100);
+						if(fgets(input, 100-1, stdin) == NULL) { //Mind the newline character that will be written to msg
+							exit(-1);
+						}
+						char *cmd = (char*) malloc(sizeof(char)*100);
+						memset(cmd, '\0', 100); 
+						int num_args = 0; 
+						char *args[100]; // maximum of 100 words allowed
+						if (strcmp("", input) != 0) { 
+							char *temp = (char*) malloc(sizeof(char)*strlen(input)); 
+							strcpy(temp, input); 
+							args[num_args] = strtok(temp, " "); 
+							while (args[num_args] != NULL) { 
+								args[++num_args] = strtok(NULL, " "); 
+							}
+							strcpy(cmd, args[0]); 
+							trim(cmd); 
+							if (num_args == 1) { 
+								args[0][strlen(args[0])] = '\0';
+							}
+						}
+						if(strcmp(cmd, "IP")==0) (IP());
+
+	}
+
+
+
+
+
 	//accepting client socket
 	int ClientSocket;
 	int socklen = sizeof(struct sockaddr_in);
 	struct sockaddr_in ClientHost;    //client information
 	ClientSocket = accept(ServerSocket, (struct sockaddr*)&ClientHost, (socklen_t*)&socklen); // accepting client request
+
+
 
 	// fd_set MasterList, WatchList;
 	// FD_ZERO(&MasterList);
@@ -203,7 +258,7 @@ void ServerH(int PortNumber){
 	// 		}
 	// 	}
 	// }
-	close(ClientSocket);
+	// close(ClientSocket);
 	close(ServerSocket);
 }
 
@@ -219,6 +274,10 @@ void ClientH(int PortNumber){
 	bzero(&ClientHost,sizeof(ClientHost));
 	ClientHost.sin_family = AF_INET;
 	ClientHost.sin_port = htons(PortNumber);
+	// if(connect(ClientSocket, (struct sockaddr *)&ClientHost, sizeof(ClientHost)) != 0) {
+	// 	perror("Connecting Error");
+	// 	close(ClientSocket); exit(-1);
+	// }
 	close(ClientSocket);
 }
 
@@ -327,7 +386,7 @@ void LIST(){
 		if(curr_user.is_logged_in) {
 			char *buf = (char*) malloc(sizeof(char)*500);
 			bzero(buf, 500);
-			sprintf(buf, "%-5d%-35s%-20s%-8d\n", count, list[i].hostname, list[i].ip_addr, list[i].port_num);
+			sprintf(buf, "%-5d%-35s%20s%-8d\n", count, list[i].hostname, list[i].ip_addr, list[i].port_num);
 			ret[count-1] = buf;
 			count++;
 		}
@@ -354,32 +413,24 @@ void STATISTICS(){
 		list[j] = tmp_user;
 
 	}
-	cse4589_print_and_log("[STATISTICS:SUCCESS]\n]");
-	int count = 1;
+
+	cse4589_print_and_log("[%STATISTICS:SUCCESS]\n");
 	for(int i = 0; i < numOf_user; ++i) {
-		if(curr_user.is_logged_in) {
-			char *buf = (char*) malloc(sizeof(char)*500);
-			bzero(buf, 500);
-			char *statis = "Logged-out";
-			if(list[i].is_logged_in){
-				statis = "Logged-in";
-			}
-			sprintf(buf,"%-5d%-35s%-8d%-8d%-8s\n", count, list[i].num_msg_sent, list[i].num_msg_rcv, statis);
-			ret[count-1] = buf;
-			count++;
+		if(list[i].status == 1 || list[i].status == 2) {
+			char *s;
+			if(list[i].status == 1) {s = "logged-out";}
+			else if(list[i].status == 2) {s = "logged-in";}
+			else{}
+			cse4589_print_and_log("%-5d%-35s%-8d%-8d%-8s\n", i+1, list[i].hostname, list[i].num_msg_sent, list[i].num_msg_rcv, s);
 		}
 	}
-	cse4589_print_and_log("[STATISTICS:END]\n]");
+	cse4589_print_and_log("[%STATISTICS:END]\n");
 }
 
 void BLOCKED(){
 }
 
 void LOGIN(){
-	// if(connect(ClientSocket, (struct sockaddr *)&ClientHost, sizeof(ClientHost)) != 0) {
-	// 	cse4589_print_and_log("[LOGIN:ERROR]")
-	// 	close(ClientSocket); exit(-1);
-	// }
 }
 
 void REFRESH(){
