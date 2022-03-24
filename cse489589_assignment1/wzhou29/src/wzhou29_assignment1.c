@@ -30,6 +30,7 @@
 #include <string.h>
 #include <arpa/inet.h>
 #include <ctype.h>
+#include <sys/select.h>
 
 #include "../include/global.h"
 #include "../include/logger.h"
@@ -201,7 +202,7 @@ void ServerH(int PortNumber){
 	// 		}
 	// 	}
 	// }
-	// close(ClientSocket);
+	close(ClientSocket);
 	close(ServerSocket);
 }
 
