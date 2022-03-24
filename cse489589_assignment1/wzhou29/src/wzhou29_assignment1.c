@@ -144,28 +144,27 @@ void ServerH(int PortNumber){
 		exit(-1);
 	}
 	// //accepting client socket
-	// int ClientSocket;
 	// int socklen = sizeof(struct sockaddr_in);
 	// struct sockaddr_in ClientHost;    //client information
-	// ClientSocket = accept(ServerSocket, (struct sockaddr*)&ClientHost, (socklen_t*)&socklen); // accepting client request
+	// int ClientSocket = accept(ServerSocket, (struct sockaddr*)&ClientHost, (socklen_t*)&socklen); // accepting client request
 
-	// fd_set MasterList, WatchList;
-	// FD_ZERO(&MasterList);
-	// FD_ZERO(&WatchList);
-	// FD_SET(ServerSocket,&MasterList);
-	// // FD_SET(ClientSocket,&MasterList);
-	// int HSocket = ServerSocket;
-	// while(1){
-	// 	memcpy(&WatchList,&MasterList,sizeof(MasterList));
-	// 	if(select(HSocket+1,&WatchList,NULL,NULL,NULL) < 0){
-	// 		perror("Select Error");
-	// 		close(ServerSocket);
-	// 		exit(-1);
-	// 	}
-	// 	char *input;
-	// 	scanf("%s",input);
-	// 	cse4589_print_and_log("%s",input);
-	// }
+	fd_set MasterList, WatchList;
+	FD_ZERO(&MasterList);
+	FD_ZERO(&WatchList);
+	FD_SET(ServerSocket,&MasterList);
+	// FD_SET(ClientSocket,&MasterList);
+	int HSocket = ServerSocket;
+	while(1){
+		memcpy(&WatchList,&MasterList,sizeof(MasterList));
+		if(select(HSocket+1,&WatchList,NULL,NULL,NULL) < 0){
+			perror("Select Error");
+			close(ServerSocket);
+			exit(-1);
+		}
+		char *input;
+		scanf("%s",input);
+		cse4589_print_and_log("%s",input);
+	}
 }
 
 // client
