@@ -106,7 +106,7 @@ int main(int argc, char **argv)
 			ClientH(atoi(argv[2]));
 		}
 		else { 
-			cse4589_print_and_log("./[name of file] [c/s] [port]"); 
+			cse4589_print_and_log("./[name of file] [c/s] [port]\n"); 
 			exit(-1); 
 		}
 		
@@ -219,10 +219,6 @@ void ClientH(int PortNumber){
 	bzero(&ClientHost,sizeof(ClientHost));
 	ClientHost.sin_family = AF_INET;
 	ClientHost.sin_port = htons(PortNumber);
-	// if(connect(ClientSocket, (struct sockaddr *)&ClientHost, sizeof(ClientHost)) != 0) {
-	// 	perror("Connecting Error");
-	// 	close(ClientSocket); exit(-1);
-	// }
 	close(ClientSocket);
 }
 
@@ -331,7 +327,7 @@ void LIST(){
 		if(curr_user.is_logged_in) {
 			char *buf = (char*) malloc(sizeof(char)*500);
 			bzero(buf, 500);
-			sprintf(buf, "%-5d%-35s%20s%-8d\n", count, list[i].hostname, list[i].ip_addr, list[i].port_num);
+			sprintf(buf, "%-5d%-35s%-20s%-8d\n", count, list[i].hostname, list[i].ip_addr, list[i].port_num);
 			ret[count-1] = buf;
 			count++;
 		}
@@ -341,12 +337,49 @@ void LIST(){
 }
 
 void STATISTICS(){
+	struct user curr_user;
+	int numOf_user;
+	struct user *list;
+	char **ret;
+
+	for(int i = 0; i < numOf_user; i++) {
+		int j = i;
+		for(int k = i+1; k < numOf_user; ++j) {
+			if(list[k].port_num < list[j].port_num) {
+				j = k;
+			}
+		}
+		struct user tmp_user = list[i];
+		list[i] = list[j];
+		list[j] = tmp_user;
+
+	}
+	cse4589_print_and_log("[STATISTICS:SUCCESS]\n]");
+	int count = 1;
+	for(int i = 0; i < numOf_user; ++i) {
+		if(curr_user.is_logged_in) {
+			char *buf = (char*) malloc(sizeof(char)*500);
+			bzero(buf, 500);
+			char *statis = "Logged-out";
+			if(list[i].is_logged_in){
+				statis = "Logged-in";
+			}
+			sprintf(buf,"%-5d%-35s%-8d%-8d%-8s\n", count, list[i].num_msg_sent, list[i].num_msg_rcv, statis);
+			ret[count-1] = buf;
+			count++;
+		}
+	}
+	cse4589_print_and_log("[STATISTICS:END]\n]");
 }
 
 void BLOCKED(){
 }
 
 void LOGIN(){
+	// if(connect(ClientSocket, (struct sockaddr *)&ClientHost, sizeof(ClientHost)) != 0) {
+	// 	cse4589_print_and_log("[LOGIN:ERROR]")
+	// 	close(ClientSocket); exit(-1);
+	// }
 }
 
 void REFRESH(){
