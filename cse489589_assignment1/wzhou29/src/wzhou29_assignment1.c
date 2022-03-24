@@ -1,6 +1,7 @@
 /**
  * @wzhou29_assignment1
  * @author  Weicheng Zhou <wzhou29@buffalo.edu>
+ * @author  Haifeng Xiao <haifengx@bufalo.edu>
  * @version 1.0
  *
  * @section LICENSE
