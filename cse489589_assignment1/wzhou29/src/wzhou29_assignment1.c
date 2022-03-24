@@ -132,30 +132,28 @@ void ServerH(int PortNumber){
 	ServerHost.sin_family = AF_INET; // Address Family: IPv4
 	ServerHost.sin_addr.s_addr = htonl(INADDR_ANY); // Internet Address       
 	ServerHost.sin_port = htons(PortNumber); // Port Number
-	if (bind(ServerSocket,(struct sockaddr *)&ServerHost,sizeof(ServerHost)) != 0){ // Bind socket and check if the socket bind or not if not print error message and exit
+	if (bind(ServerSocket,(struct sockaddr *)&ServerHost,sizeof(ServerHost)) < 0){ // Bind socket and check if the socket bind or not if not print error message and exit
 		perror("Error on binding Socket");
 		close(ServerSocket);
 		exit(-1);
 	}
 	//set server socket to lsiten
-	if(listen(ServerSocket,BACKLOG) != 0){ // Listen to port, if can't listen to port number, it will exit
+	if(listen(ServerSocket,BACKLOG) < 0){ // Listen to port, if can't listen to port number, it will exit
 		perror("Error on listening to Port");
 		close(ServerSocket);
 		exit(-1);
 	}
-
-	//accepting client socket
-	int ClientSocket;
-	int socklen = sizeof(struct sockaddr_in);
-	struct sockaddr_in ClientHost;    //client information
-	ClientSocket = accept(ServerSocket, (struct sockaddr*)&ClientHost, (socklen_t*)&socklen); // accepting client request
+	// //accepting client socket
+	// int ClientSocket;
+	// int socklen = sizeof(struct sockaddr_in);
+	// struct sockaddr_in ClientHost;    //client information
+	// ClientSocket = accept(ServerSocket, (struct sockaddr*)&ClientHost, (socklen_t*)&socklen); // accepting client request
 
 	// fd_set MasterList, WatchList;
 	// FD_ZERO(&MasterList);
 	// FD_ZERO(&WatchList);
 	// FD_SET(ServerSocket,&MasterList);
-	// FD_SET(0,&MasterList);
-
+	// // FD_SET(ClientSocket,&MasterList);
 	// int HSocket = ServerSocket;
 	// while(1){
 	// 	memcpy(&WatchList,&MasterList,sizeof(MasterList));
@@ -164,45 +162,9 @@ void ServerH(int PortNumber){
 	// 		close(ServerSocket);
 	// 		exit(-1);
 	// 	}
-	// 	for(int idx = 0; idx <= HSocket; ++idx){
-	// 		if(FD_ISSET(idx,&WatchList)){
-	// 			if(idx == 0){
-	// 				char *input = (char*) malloc(sizeof(char)*1024);
-	// 				bzero(input,1024);
-	// 				if(fgets(input,1023,0) == NULL){
-	// 					exit(-1);
-	// 				}
-	// 				char *cmd = (char*) malloc(sizeof(char)*32);
-	// 				bzero(cmd,32);
-	// 				int NumberArgument = 0;
-	// 				char *Argument[256];
-	// 				if(strcmp("",input) == 0){
-	// 					Argument[NumberArgument] = strtok(input,"");
-	// 					while(Argument[NumberArgument] != NULL){
-	// 						Argument[++NumberArgument] = strtok(NULL,"");
-	// 					}
-	// 					strcpy(cmd,Argument[0]);
-	// 					if(NumberArgument == 1){
-	// 						Argument[0][strlen(Argument[0])] = "\0";
-	// 					}
-	// 				}
-	// 				if(strcmp(cmd,"AUTHOR") == 0){AUTHOR();}
-	// 				else if(strcmp(cmd,"IP") == 0){IP();}
-	// 				else if(strcmp(cmd,"PORT") == 0){PORT();}
-	// 				else if(strcmp(cmd,"LIST") == 0){LIST();}
-	// 				else if(strcmp(cmd,"STATISTICS") == 0){STATISTICS();}
-	// 				else if(strcmp(cmd,"BLOCKED") == 0){BLOCKED();}
-	// 				else if(strcmp(cmd,"LOGIN") == 0){LOGIN();}
-	// 				else if(strcmp(cmd,"REFRESH") == 0){REFRESH();}
-	// 				else if(strcmp(cmd,"BROADCAST") == 0){BROADCAST();}
-	// 				else if(strcmp(cmd,"BLOCK") == 0){BLOCK();}
-	// 				else if(strcmp(cmd,"UNBLOCK") == 0){UNBLOCK();}
-	// 				else if(strcmp(cmd,"LOGOUT") == 0){LOGOUT();}
-	// 				else if(strcmp(cmd,"EXIT") == 0){EXIT();}
-	// 				else if(strcmp(cmd,"SENDFILE") == 0){SENDFILE();}
-	// 			}
-	// 		}
-	// 	}
+	// 	char *input;
+	// 	scanf("%s",input);
+	// 	cse4589_print_and_log("%s",input);
 	// }
 }
 
