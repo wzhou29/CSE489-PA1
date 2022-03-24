@@ -203,8 +203,6 @@ void ServerH(int PortNumber){
 	// 		}
 	// 	}
 	// }
-	close(ClientSocket);
-	close(ServerSocket);
 }
 
 // client
@@ -219,7 +217,6 @@ void ClientH(int PortNumber){
 	bzero(&ClientHost,sizeof(ClientHost));
 	ClientHost.sin_family = AF_INET;
 	ClientHost.sin_port = htons(PortNumber);
-	close(ClientSocket);
 }
 
 // //check if the ip address in correct form
@@ -383,6 +380,8 @@ void LOGIN(){
 }
 
 void REFRESH(){
+	cse4589_print_and_log("[REFRESH:SUCCESS]\n"); 
+	cse4589_print_and_log("[REFRESH:END]\n"); 
 }
 
 void SEND(){
@@ -400,7 +399,10 @@ void UNBLOCK(){
 void LOGOUT(){
 }
 
-void EXIT(){
+void EXIT(int Socket){
+	close(socket);
+	cse4589_print_and_log("[EXIT:SUCCESS]");
+	cse4589_print_and_log("[EXIT:END]");
 }
 
 void SENDFILE(){
