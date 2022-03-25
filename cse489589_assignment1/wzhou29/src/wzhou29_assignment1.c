@@ -72,7 +72,7 @@ int main(int argc, char **argv)
 	return 0;
 }
 
-void trim(char *str){
+void fix(char *str){
 	int index = -1;
 	for(int i = 0; str[i] != '\0';++i){
 		if (str[i] != ' ' && str[i] != '\t' && str[i] != '\n'){
@@ -197,12 +197,3 @@ int LocalIP(char *ip_addr, struct user *list_storage[], int num_users){
 	return -1;
 }
 
-int BlockedBy(char *blocker, char *block, struct user users[], int num_users){
-	int BlockerIdx = FindByIP(blocker, users, num_users);
-	for (int i = 0; i < users[BlockerIdx].num_blocked; ++i){
-		if (strcmp(users[BlockerIdx].blocked[i]->ip_addr, block) == 0){
-			return 1;
-		}
-	}
-	return 0;
-}
