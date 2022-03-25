@@ -153,7 +153,7 @@ int ConnectToServer(char *server_ip, char *server_port_char, int host_port){
 	for (int i = 0; i < strlen(server_port_char); ++i){
 		if ((!isdigit(server_port_char[i])) && isdigit(server_port_char[i]) > -1){ check_port=0; }
 	}
-	if (!ValidIP(server_ip) || check_port == 0)){
+	if (!ValidIP(server_ip) || check_port == 0){
 		cse4589_print_and_log("[%s:ERROR]\n", "LOGIN");
 		cse4589_print_and_log("[%s:END]\n", "LOGIN");
 		return -1;
