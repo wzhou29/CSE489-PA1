@@ -21,62 +21,12 @@
  *
  * This contains the main function. Add further description here....
  */
-#include <stdio.h>
-#include <stdlib.h>
 
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#include <unistd.h>
-#include <string.h>
-#include <arpa/inet.h>
-#include <ctype.h>
-#include <sys/select.h>
+//Setting for all function
+#include "../include/setting.h"
 
 #include "../include/global.h"
 #include "../include/logger.h"
-
-// construct boolean
-#ifndef __cplusplus
-typedef unsigned char bool;
-static const bool False = 0;
-static const bool True = 1;
-#endif
-
-#define BACKLOG 5 // Amount of request line up waiting for Accept() function
-
-void ClientH(int PortNumber);
-void ServerH(int PortNumber);
-bool check_port(char *port_num);
-void AUTHOR();
-void IP();
-void PORT();
-void LIST();
-void STATISTICS();
-void BLOCKED();
-void LOGIN();
-void REFRESH();
-void SEND();
-void BROADCAST();
-void BLOCK();
-void UNBLOCK();
-void LOGOUT();
-void EXIT(int Socket);
-void SENDFILE();
-
-struct user 
-{
-	char* hostname;
-	char* ip_addr;
-	int port_num;
-	int num_msg_sent;
-	int num_msg_rcv;
-	// char status;
-	// int fd;
-	bool is_logged_in;
-	bool is_server;
-	// struct message * queued_messages;
-};
 
 /**
  * main function
@@ -85,7 +35,6 @@ struct user
  * @param  argv The argument list
  * @return 0 EXIT_SUCCESS
  */
-
 int main(int argc, char **argv)
 {
 	/*Init. Logger*/
@@ -95,21 +44,23 @@ int main(int argc, char **argv)
 	fclose(fopen(LOGFILE, "w"));
 
 	/*Start Here*/
-	if(argc == 3)
-	{
-		if(strcmp("s", argv[1]) == 0 && check_port(argv[2]) == 1)
-		{
-			ServerH(atoi(argv[2]));
+
+	int check_port = 1;
+	for (int i = 0; i < strlen(argv[2]); ++i){
+		if ((!isdigit(argv[2][i])) && isdigit(argv[2][i]) > -1){ check_port=0; }
+	}
+
+	if (argc == 3 && check_port == 1){
+		if (strcmp("s", argv[1]) == 0){
+			ServerHost(atoi(argv[2]));
 		}
-		else if(strcmp("c", argv[1]) == 0 && check_port(argv[2]) == 1)
-		{
-			ClientH(atoi(argv[2]));
+		else if (strcmp("c", argv[1]) == 0){
+			ClientHost(atoi(argv[2]));
 		}
-		else { 
-			cse4589_print_and_log("./[name of file] [c/s] [port]\n"); 
-			exit(-1); 
+		else{
+			cse4589_print_and_log("Please select first argument as s or c\n");
+			exit(-1);
 		}
-		
 	}
 	else{
 		cse4589_print_and_log("Please enter two arguments: \n");
@@ -117,257 +68,141 @@ int main(int argc, char **argv)
 		cse4589_print_and_log("Second argument: Port Number\n");
 		exit(-1);
 	}
+
 	return 0;
 }
 
-// server
-void ServerH(int PortNumber){
-	// creating sock
-	int ServerSocket = socket(AF_INET,SOCK_STREAM,0); // Creating TCP Socket
-	if (ServerSocket == -1) { perror("Error On Creating Socket"); exit(-1); }
-
-	//socket information
-	struct sockaddr_in ServerHost; 	// create a new struct base on sockaddr_in  
-	bzero(&ServerHost,sizeof(ServerHost)); // initial the struct         
-	ServerHost.sin_family = AF_INET; // Address Family: IPv4
-	ServerHost.sin_addr.s_addr = htonl(INADDR_ANY); // Internet Address       
-	ServerHost.sin_port = htons(PortNumber); // Port Number
-	if (bind(ServerSocket,(struct sockaddr *)&ServerHost,sizeof(ServerHost)) < 0){ // Bind socket and check if the socket bind or not if not print error message and exit
-		perror("Error on binding Socket");
-		close(ServerSocket);
-		exit(-1);
-	}
-	//set server socket to lsiten
-	if(listen(ServerSocket,BACKLOG) < 0){ // Listen to port, if can't listen to port number, it will exit
-		perror("Error on listening to Port");
-		close(ServerSocket);
-		exit(-1);
-	}
-	// //accepting client socket
-	// int socklen = sizeof(struct sockaddr_in);
-	// struct sockaddr_in ClientHost;    //client information
-	// int ClientSocket = accept(ServerSocket, (struct sockaddr*)&ClientHost, (socklen_t*)&socklen); // accepting client request
-
-	fd_set MasterList, WatchList;
-	FD_ZERO(&MasterList);
-	FD_ZERO(&WatchList);
-	FD_SET(ServerSocket,&MasterList);
-	// FD_SET(ClientSocket,&MasterList);
-	int HSocket = ServerSocket;
-	while(1){
-		memcpy(&WatchList,&MasterList,sizeof(MasterList));
-		if(select(HSocket+1,&WatchList,NULL,NULL,NULL) < 0){
-			perror("Select Error");
-			close(ServerSocket);
-			exit(-1);
+void trim(char *str){
+	int index = -1;
+	for(int i = 0; str[i] != '\0';++i){
+		if (str[i] != ' ' && str[i] != '\t' && str[i] != '\n'){
+			index = i;
 		}
-		char *input;
-		scanf("%s",input);
-		cse4589_print_and_log("%s",input);
 	}
+	str[index + 1] = '\0';
 }
 
-// client
-void ClientH(int PortNumber){
-	//creating socket
-	int ClientSocket = socket(AF_INET,SOCK_STREAM,0); // Creating TCP Socket
-	if(ClientSocket == -1) { perror("Error On Creating Socket"); exit(-1);}
-
-	struct host_to_server* hoster;
-	struct sockaddr_in ClientHost;
-	ClientHost.sin_addr.s_addr = htonl(INADDR_ANY);  // point to ip address
-	bzero(&ClientHost,sizeof(ClientHost));
-	ClientHost.sin_family = AF_INET;
-	ClientHost.sin_port = htons(PortNumber);
-}
-
-// //check if the ip address in correct form
-// bool check_ip(char *ip) {
-//     char tmp[16];
-//     int sections = 0;
-//     char *ip_length[16];
-
-// 	memset(tmp, '\0', 16);
-// 	strcpy(tmp, ip);
+int ValidIP(char *ip){
+	char temp[20];
+	bzero(temp,20);
+	strcpy(temp, ip);
 	
-// 	ip_length[sections] = strtok(tmp, ".");
-// 	while (ip_length[sections] != NULL) { 
-// 		ip_length[++sections] = strtok(NULL, "."); 
-// 	}
-    
-//     for (int i = 0; i < sections; ++i) { 
-// 			for (int j = 0; j < strlen(ip_length[i]); ++j) { 
-// 				if (ip_length[i][j] < '0' || ip_length[i][j] > '9')	return 0;
-// 			}
-// 			int check = atoi(ip_length[i]); 
-//             if(check < 0 || check > 256) return 0;
-// 		}
-// 	if (sections != 4)return 0; 
-// 	return 1;
-// }
+	int num_args = 0;
+	char *args[20];
 
-// //Check if the port in the correct form
-bool check_port(char *port_num){
-    if(strlen(port_num) != 4) return 0;
-    else{
-        for(int i = 0; i < strlen(port_num); i++){
-            if(!isdigit(port_num[i])){
-                perror("Invalid Port Number!");
-                return 0;
-            }
-        }
-    }
-    return 1;
-}
-
-// print AUTHOR information
-void AUTHOR(){
-	// Print the author information
-	cse4589_print_and_log("[AUTHOR:SUCCESS]\n");
-	cse4589_print_and_log("I, %s, have read and understood the course academic integrity policy.\n", "haifengx");
-	cse4589_print_and_log(("I, %s, have read and understood the course academic integrity policy.\n", "wzhou29"));
-	cse4589_print_and_log("[AUTHOR:END\n]");
-}
-void IP(){
-	char* ip;
-	int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
-	struct sockaddr_in addr;
-	addr.sin_family = AF_INET;
-	inet_pton(AF_INET, "8.8.8.8", &addr.sin_addr);  // set ip address to google's ip address
-	addr.sin_port = htons(53);
-
-	// connecting socket
-	if(connect(sockfd, (struct sockaddr*)&addr, sizeof(addr)) == -1) {
-		cse4589_print_and_log("[%s:ERROR]\n", "IP");
-		cse4589_print_and_log("[%s:END]\n", "IP");
-		return;
+	args[num_args] = strtok(temp, ".");
+	while (args[num_args] != NULL){
+		args[++num_args] = strtok(NULL, ".");
 	}
-	bzero(&addr, sizeof(addr));
-	int addr_len = sizeof(addr);
-	getsockname(sockfd, (struct sockaddr *)&addr, &addr_len);
-	inet_ntop(AF_INET, &addr.sin_addr, ip, sizeof(ip));
 
-	cse4589_print_and_log("[%s:SUCCESS]\n", "IP");
-	cse4589_print_and_log("IP:%s\n", ip);
-	cse4589_print_and_log("[%s:END]\n", "IP");
-	close(sockfd);
-	return; 
-}
-
-// Print Port information
-void PORT(){
-	struct user curr_user;
-	cse4589_print_and_log("[PORT:SUCCESS]\n");
-	cse4589_print_and_log("PORT:%d\n", curr_user.port_num);
-	cse4589_print_and_log("[PORT:END]\n");
-}
-
-void LIST(){
-	struct user curr_user;
-	int numOf_user;
-	struct user *list;
-	char **ret;
-
-	for(int i = 0; i < numOf_user; i++) {
-		int j = i;
-		for(int k = i+1; k < numOf_user; ++j) {
-			if(list[k].port_num < list[j].port_num) {
-				j = k;
+	if (num_args != 4){ return 0; }
+	else{
+		for (int i = 0; i < num_args; ++i){
+			for (int j = 0; j < strlen(args[i]); ++j){
+				if (isdigit(args[i][j])){ return 0; }
 			}
+			int check = atoi(args[i]);
+			if (check > 256 || check < 0){ return 0; }
 		}
-		struct user tmp_user = list[i];
-		list[i] = list[j];
-		list[j] = tmp_user;
-
 	}
-	cse4589_print_and_log("[LIST:SUCCESS]\n]");
+	return 1;
+}
+
+void ListFunc(struct user *users, int numOf_users, char **list_format){
+	for (int i = 0; i < numOf_users; ++i){
+		int smallest = i;
+		for (int j = i + 1; j < numOf_users; ++j){
+			if (users[j].PortNumber < users[smallest].PortNumber){ smallest = j; }
+		}
+		struct user temp = users[i];
+		users[i] = users[smallest];
+		users[smallest] = temp;
+	}
 	int count = 1;
-	for(int i = 0; i < numOf_user; ++i) {
-		if(curr_user.is_logged_in) {
-			char *buf = (char*) malloc(sizeof(char)*500);
-			bzero(buf, 500);
-			sprintf(buf, "%-5d%-35s%-20s%-8d\n", count, list[i].hostname, list[i].ip_addr, list[i].port_num);
-			ret[count-1] = buf;
+	for (int i = 0; i < numOf_users; ++i){
+		if (users[i].login == 1){
+			char *buffer = (char *)malloc(sizeof(char) * MsgSize);
+			bzero(buffer,MsgSize);
+			cse4589_print_and_log(buffer, "%-5d%-35s%-20s%-8d\n", count, users[i].hostname, users[i].ip_addr, users[i].PortNumber);
+			list_format[count - 1] = buffer;
 			count++;
 		}
 	}
-	cse4589_print_and_log("[LIST:END]\n]");
-
 }
 
-void STATISTICS(){
-	struct user curr_user;
-	int numOf_user;
-	struct user *list;
-	char **ret;
-
-	for(int i = 0; i < numOf_user; i++) {
-		int j = i;
-		for(int k = i+1; k < numOf_user; ++j) {
-			if(list[k].port_num < list[j].port_num) {
-				j = k;
-			}
-		}
-		struct user tmp_user = list[i];
-		list[i] = list[j];
-		list[j] = tmp_user;
-
-	}
-	cse4589_print_and_log("[STATISTICS:SUCCESS]\n]");
-	int count = 1;
-	for(int i = 0; i < numOf_user; ++i) {
-		if(curr_user.is_logged_in) {
-			char *buf = (char*) malloc(sizeof(char)*500);
-			bzero(buf, 500);
-			char *statis = "Logged-out";
-			if(list[i].is_logged_in){
-				statis = "Logged-in";
-			}
-			sprintf(buf,"%-5d%-35s%-8d%-8d%-8s\n", count,list[i].hostname, list[i].num_msg_sent, list[i].num_msg_rcv, statis);
-			ret[count-1] = buf;
-			count++;
+int FindByIP(char *ip, struct user users[], int num_users){
+	for (int i = 0; i < num_users; ++i){
+		if (strcmp(users[i].ip_addr, ip) == 0){
+			return i;
 		}
 	}
-	cse4589_print_and_log("[STATISTICS:END]\n]");
+	return -1;
 }
 
-void BLOCKED(){
+int FindBySocket(int socket, struct user users[], int num_users){
+	for (int i = 0; i < num_users; ++i){
+		if (socket == users[i].socket){
+			return i;
+		}
+	}
+	return -1;
 }
 
-void LOGIN(){
-	// if(connect(ClientSocket, (struct sockaddr *)&ClientHost, sizeof(ClientHost)) != 0) {
-	// 	cse4589_print_and_log("[LOGIN:ERROR]")
-	// 	close(ClientSocket); exit(-1);
-	// }
+int ConnectToServer(char *server_ip, char *server_port_char, int host_port){
+	int check_port = 1;
+	for (int i = 0; i < strlen(server_port_char); ++i){
+		if ((!isdigit(server_port_char[i])) && isdigit(server_port_char[i]) > -1){ check_port=0; }
+	}
+	if (!ValidIP(server_ip || check_port == 0)){
+		cse4589_print_and_log("[%s:ERROR]\n", "LOGIN");
+		cse4589_print_and_log("[%s:END]\n", "LOGIN");
+		return -1;
+	}
+	else{
+		int server_port = atoi(server_port_char);
+		int socketfd;
+		struct sockaddr_in server_addr, client_addr;
+
+		socketfd = socket(AF_INET, SOCK_STREAM, 0);
+		if (socketfd < 0){
+			perror("socket() failed\n");
+		}
+		bzero(&client_addr, sizeof(client_addr));
+		client_addr.sin_family = AF_INET;
+		client_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+		client_addr.sin_port = htons(host_port);
+		if (bind(socketfd, (struct sockaddr *)&client_addr, sizeof(struct sockaddr_in)) != 0){
+			perror("failed to bind PortNumber to client");
+		}
+		bzero(&server_addr, sizeof(server_addr));
+		server_addr.sin_family = AF_INET;
+		inet_pton(AF_INET, server_ip, &server_addr.sin_addr);
+		server_addr.sin_port = htons(server_port);
+		if (connect(socketfd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0){
+			socketfd = -1;
+			cse4589_print_and_log("[%s:ERROR]\n", "LOGIN");
+			cse4589_print_and_log("[%s:END]\n", "LOGIN");
+			return -1;
+		}
+		return socketfd;
+	}
 }
 
-void REFRESH(){
-	cse4589_print_and_log("[REFRESH:SUCCESS]\n"); 
-	cse4589_print_and_log("[REFRESH:END]\n"); 
+int LocalIP(char *ip_addr, struct user *list_storage[], int num_users){
+	for (int i = 0; i < num_users; ++i){
+		if (strcmp((list_storage[i])->ip_addr, ip_addr) == 0){
+			return i;
+		}
+	}
+	return -1;
 }
 
-void SEND(){
-}
-
-void BROADCAST(){
-}
-
-void BLOCK(){
-}
-
-void UNBLOCK(){
-}
-
-void LOGOUT(){
-}
-
-void EXIT(int Socket){
-	close(Socket);
-	cse4589_print_and_log("[EXIT:SUCCESS]");
-	cse4589_print_and_log("[EXIT:END]");
-}
-
-void SENDFILE(){
-	cse4589_print_and_log("[%s:ERROR]\n", "IP");
-	cse4589_print_and_log("[%s:END]\n", "IP");
+int BlockedBy(char *blocker, char *block, struct user users[], int num_users){
+	int BlockerIdx = FindByIP(blocker, users, num_users);
+	for (int i = 0; i < users[BlockerIdx].num_blocked; ++i){
+		if (strcmp(users[BlockerIdx].blocked[i]->ip_addr, block) == 0){
+			return 1;
+		}
+	}
+	return 0;
 }
