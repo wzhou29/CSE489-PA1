@@ -27,9 +27,9 @@ void ClientHost(int PortNumber) {
 						if(fgets(input, MsgSize-1, stdin) == NULL) {
 							exit(-1);
 						}
-						trim(input);
-						char *cmd = (char*) malloc(sizeof(char)*CMDSize);
-						bzero(cmd,CMDSize);
+						fix(input);
+						char *command = (char*) malloc(sizeof(char)*CMDSize);
+						bzero(command,CMDSize);
 						int num_args = 0; 
 						char *args[100];
 						if (strcmp("", input) != 0) { 
@@ -39,21 +39,21 @@ void ClientHost(int PortNumber) {
 							while (args[num_args] != NULL) { 
 								args[++num_args] = strtok(NULL, " "); 
 							}
-							strcpy(cmd, args[0]); 
-							trim(cmd); 
+							strcpy(command, args[0]); 
+							fix(command); 
 							if (num_args == 1) { 
 								args[0][strlen(args[0])] = '\0';
 							}
 						}						 
-						if (strcmp(cmd, "AUTHOR") == 0) { AUTHOR();}
-						else if (strcmp(cmd, "IP") == 0) { IP();; }
-						else if (strcmp(cmd, "PORT") == 0) { PORT(PortNumber); }
-						else if (strcmp(cmd, "LIST") == 0) {
-							cse4589_print_and_log("[%s:ERROR]\n", cmd);
+						if (strcmp(command, "AUTHOR") == 0) { AUTHOR();}
+						else if (strcmp(command, "IP") == 0) { IP();; }
+						else if (strcmp(command, "PORT") == 0) { PORT(PortNumber); }
+						else if (strcmp(command, "LIST") == 0) {
+							cse4589_print_and_log("[%s:ERROR]\n", command);
 							cse4589_print_and_log("Didin't login to Server\n");
-							cse4589_print_and_log("[%s:END]\n", cmd);
+							cse4589_print_and_log("[%s:END]\n", command);
 						}
-						else if (strcmp(cmd, "LOGIN") == 0) {
+						else if (strcmp(command, "LOGIN") == 0) {
 							if (num_args == 3) { 
 								server = ConnectToServer(args[1], args[2], PortNumber); 
 								if (server > -1) { 
@@ -64,61 +64,29 @@ void ClientHost(int PortNumber) {
 									login = 1; 
 								} 
 								else { 
-									cse4589_print_and_log("[%s:ERROR]\n", cmd);
-									cse4589_print_and_log("[%s:END]\n", cmd);
+									cse4589_print_and_log("[%s:ERROR]\n", command);
+									cse4589_print_and_log("[%s:END]\n", command);
 								}
 							}
 						}
-						else if (strcmp(cmd, "EXIT") == 0) {
+						else if (strcmp(command, "EXIT") == 0) {
 							if (server == -8) {
 								server = ConnectToServer(args[1], args[2], PortNumber); 
 							}
 							if (server > 0) { 
-								send(server, cmd, strlen(cmd), 0); 
+								send(server, command, strlen(command), 0); 
 							}
-							cse4589_print_and_log("[%s:SUCCESS]\n", cmd);
-							cse4589_print_and_log("[%s:END]\n", cmd);
+							cse4589_print_and_log("[%s:SUCCESS]\n", command);
+							cse4589_print_and_log("[%s:END]\n", command);
 							exit(0); 
 						}
 						else {
 							if (server > 0) { 
-								if (strcmp("LIST", cmd) == 0) {
-									cse4589_print_and_log("[%s:SUCCESS]\n", cmd);
+								if (strcmp("LIST", command) == 0) {
+									cse4589_print_and_log("[%s:SUCCESS]\n", command);
 									cse4589_print_and_log("%s", list_storage); 
-									cse4589_print_and_log("[%s:END]\n", cmd);
-								}
-								else { 
-									send(server, input, strlen(input), 0);
-									if (strcmp("LOGOUT", cmd) == 0) {															
-										FD_CLR(server, &master_list); 
-										close(server); 
-										server = -8; 
-										cse4589_print_and_log("[%s:SUCCESS]\n", cmd);
-										cse4589_print_and_log("[%s:END]\n", cmd);
-									}
-									else if (strcmp("REFRESH", cmd) == 0) { 
-										refresh = 1; 
-									}
+									cse4589_print_and_log("[%s:END]\n", command);
 								}		
-							}
-						}
-					}
-					else if (sock_idx == server) { 
-						char *buffer = (char*) malloc(sizeof(char)*MsgSize);
-						bzero(buffer,MsgSize);
-						if (recv(server, buffer, MsgSize, 0) <= 0) { 
-							FD_CLR(sock_idx, &master_list); 
-							close(server); 
-						}
-						else {
-							if (!refresh && !login) { 
-								cse4589_print_and_log("%s", buffer); 
-								fflush(stdout); 
-							}
-							if (refresh || login) {
-								strcpy(list_storage, buffer); 
-								refresh = 0;
-								login = 0; 
 							}
 						}
 					}
