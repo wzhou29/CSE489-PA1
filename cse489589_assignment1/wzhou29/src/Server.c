@@ -26,21 +26,16 @@ void ServerHost(int PortNumber){
 	int num_users = 0;
 	while(1){
 		memcpy(&watch_list, &master_list, sizeof(master_list));
-		if ((selret = select(head_socket + 1, &watch_list, NULL, NULL, NULL)) < 0){
-			perror("select() Error");
-			exit(-1);
-		}
+		if ((selret = select(head_socket + 1, &watch_list, NULL, NULL, NULL)) < 0){ exit(-1);}
 		else{
 			for (SocketIdx = 0; SocketIdx <= head_socket; ++SocketIdx){
 				if (FD_ISSET(SocketIdx, &watch_list)){
 					if (SocketIdx == STDIN){
-						char *input = (char *)malloc(sizeof(char) * MsgSize);
+						char *input = (char *)calloc(MsgSize, sizeof(char));
 						bzero(input,MsgSize);
-						if (fgets(input, MsgSize - 1, stdin) == NULL){
-							exit(-1);
-						}
+						if (fgets(input, MsgSize - 1, stdin) == NULL){exit(-1);}
 						fix(input);
-						char *command = (char *)malloc(sizeof(char) * CMDSize);
+						char *command = (char *)calloc(CMDSize, sizeof(char));
 						bzero(command,CMDSize);
 						int num_args = 0;
 						char *args[100];
@@ -53,33 +48,26 @@ void ServerHost(int PortNumber){
 							}
 							strcpy(command, args[0]);
 							fix(command);
-							if (num_args == 1){
-								args[0][strlen(args[0])] = '\0';
-							}
+							if (num_args == 1){args[0][strlen(args[0])] = '\0';}
 						}
 						if (strcmp(command, "AUTHOR") == 0){AUTHOR();}
 						else if (strcmp(command, "IP") == 0){IP();}
 						else if (strcmp(command, "PORT") == 0){PORT(PortNumber);}
-						else if (strcmp(command, "LIST") == 0){
-							for (int i = 0; i < num_users; ++i){
-								int min = i;
-								for (int j = i + 1; j < num_users; ++j){
-									if (users[j].PortNumber < users[min].PortNumber){ min = j;}
-								}
-								struct user temp = users[i];
-								users[i] = users[min];
-								users[min] = temp;
-							}
-							int x = 1;
-							cse4589_print_and_log("[%s:SUCCESS]\n", "LIST");
-							for (int i = 0; i < num_users; ++i){
-								if (users[i].login == 1){
-									cse4589_print_and_log("%-5d%-35s%-20s%-8d\n", x, users[i].hostname, users[i].ip_addr, users[i].PortNumber);
-									++x;
-								}
-							}
-							cse4589_print_and_log("[%s:END]\n", "LIST");
-						}
+						else if (strcmp(command, "LIST") == 0){ 
+                            int counter = 1;
+                            for(int i = 0; i < num_users; i++) {
+                                int small = i;
+                                for(int j = i+1; j < num_users; j++) {
+                                    if(users[j].PortNumber < users[small].PortNumber) { small = j; }
+                                }
+                                struct user user_inList = users[i];
+                                users[i] = users[small];
+                                users[small] = user_inList;
+                            }
+                            cse4589_print_and_log("[%s:SUCCESS]\n", "LIST");
+                            for(int i = 0; i < 4; i++) {
+                                if(users[i].login == 1) cse4589_print_and_log("%-5d%-35s%-20s%-8d\n", counter, users[i].hostname, users[i].ip_addr, users[i].PortNumber); counter++; }
+                        }
 						else if (strcmp(command, "STATISTICS") == 0){STATISTICS(users,num_users);}
 					
 	
