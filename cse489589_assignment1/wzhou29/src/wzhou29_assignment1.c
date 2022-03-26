@@ -190,9 +190,7 @@ int ConnectToServer(char *server_ip, char *server_port_char, int host_port){
 
 int LocalIP(char *ip_addr, struct user *list_storage[], int num_users){
 	for (int i = 0; i < num_users; ++i){
-		if (strcmp((list_storage[i])->ip_addr, ip_addr) == 0){
-			return i;
-		}
+		if (strcmp((list_storage[i])->ip_addr, ip_addr) == 0){ return i; }
 	}
 	return -1;
 }
