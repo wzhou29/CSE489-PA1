@@ -55,13 +55,9 @@ void STATISTICS(struct user users[], int num_users){
 	for (int i = 0; i < num_users; ++i){
 		if (users[i].login == 1 || users[i].logout == 1){
 			char *status;
-			if (users[i].login == 1){
-				status = "logged-in";
-			}
-			else if (users[i].logout == 1){
-				status = "logged-out";
-			}
-			cse4589_print_and_log("%-5d%-35s%-8d%-8d%-8s\n", i + 1, users[i].hostname, users[i].msg_sent, users[i].msg_recv, status);
+			if (users[i].login == 1){ status = "logged-in"; }
+			else if (users[i].logout == 1){ status = "logged-out"; }
+			cse4589_print_and_log("%-5d%-35s%-8d%-8d%-8s\n", i + 1, users[i].hostname, users[i].sent, users[i].recieve, status);
 		}
 	}
 	cse4589_print_and_log("[%s:END]\n", "STATISTICS");
