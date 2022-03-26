@@ -28,33 +28,28 @@
 
 struct user{
 	char hostname[HOSTNAME_LEN];
-	char ip_addr[16];
+	char ip_addr[18];
 	int PortNumber;
-	int status;
+
 	int login;
 	int logout;
 	int socket;
 
-	int msg_sent;
-	int msg_recv;
+	int sent;
+	int recieve;
 
-	char buffered[100][MsgSize];
+	char buffered[256][MsgSize];
 	int buff_size;
 
-	int num_blocked;
-	struct user *blocked[4];
 
-	struct user *list_storage[4];
-	int num_users;
 };
 
-void trim(char *str);
+void fix(char *str);
 int ValidIP(char *ip);
 void ListFunc(struct user *users, int size, char **list_format);
 int FindByIP(char *ip, struct user users[], int num_users);
 int FindBySocket(int socket, struct user users[], int num_users);
 int LocalIP(char *ip_addr, struct user *list_storage[], int num_users);
-int BlockedBy(char *blocker, char *block, struct user users[], int num_users);
 int ConnectToServer(char *server_ip, char *server_port_char, int host_port);
 
 void ServerHost(int PortNumber);
@@ -64,10 +59,6 @@ void AUTHOR();
 void IP();
 void PORT(int PortNumber);
 void STATISTICS(struct user users[], int num_users);
-void BLOCKED(struct user users[], int num_users, char *ip);
-int SEND(int from_socket, char *to_ip, char *buffer, struct user users[], int num_users);
-int BROADCAST(int from_socket, char *buffer, struct user users[], int num_users);
-int BLOCK(int socket, char *ip, struct user users[], int num_users);
-int UNBLOCK(int socket, char *ip, struct user users[], int num_users);
+
 
 #endif
